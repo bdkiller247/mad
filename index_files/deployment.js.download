@@ -1,0 +1,210 @@
+var client_view_id="61676254";
+function loadLiftAI(){
+    var c=document.createElement("script");
+    c.type="text/javascript";
+    c.src="https://lift-ai-js.marketlinc.com/www.tungstenautomation.com/snippet.js?viewId\x3d"+client_view_id;
+    c.id="vs_snippet_script_id";document.getElementsByTagName("head")[0].appendChild(c)
+}
+try{
+    loadLiftAI()
+} catch(c){}
+var ML_getCookie = function(e){const o=encodeURIComponent(e)+"=",n=document.cookie.split(";");for(let e=0;e<n.length;e++){let t=n[e];for(;" "===t.charAt(0);)t=t.substring(1);if(0===t.indexOf(o)){const e=t.substring(o.length,t.length);try{return decodeURIComponent(e)}catch(e){return console.error("Error decoding cookie:",e.message),""}}}return""}
+var ML_setCookie=function(e,t,i){var o=new Date;o.setTime(o.getTime()+864e5*i);var n="expires="+o.toUTCString();document.cookie=e+"="+t+";domain=.tungstenautomation.com;"+n+";path=/"};
+try {
+    var ml_intent_band=function(e){return e>60?"High Intent":e>30&&e<=60?"Mid Intent":"Low Intent"},ml_vs_score=ML_getCookie("vs_conv_ai");if(""!=ml_vs_score){var e=parseInt(ml_vs_score.split("-")[1]);ML_setCookie("vs_intent",ml_intent_band(e)),sessionStorage.setItem("ml_old_score",ml_vs_score)}else if(""==ml_vs_score)var ml_scoring_load_count=0,ml_scoring_load_interval=setInterval(function(){if(""!=ML_getCookie("vs_conv_ai")||ml_scoring_load_count>=8){ml_vs_score=ML_getCookie("vs_conv_ai"),clearInterval(ml_scoring_load_interval);var e=parseInt(ml_vs_score.split("-")[1]);ML_setCookie("vs_intent",ml_intent_band(e)),sessionStorage.setItem("ml_old_score",ml_vs_score)}ml_scoring_load_count++},1e3);var ml_check_cookie_update_count=0,ml_check_cookie_update_Interval=setInterval(function(){try{var e=sessionStorage.getItem("ml_old_score");if(""!=e&&e!=ML_getCookie("vs_conv_ai")||ml_check_cookie_update_count>6){clearInterval(ml_check_cookie_update_Interval);var t=ML_getCookie("vs_conv_ai"),o=parseInt(t.split("-")[1]);ML_setCookie("vs_intent",ml_intent_band(o)),sessionStorage.setItem("ml_old_score",ML_getCookie("vs_conv_ai")),void 0!==window.dataLayer&&dataLayer.push({event:"Lift_AI_Score_Updated"})}ml_check_cookie_update_count++}catch(n){}},2500);
+} catch (error) {
+    //Nothing    
+}
+
+
+
+function ml_scoring_band(){
+	var ml_vs_band = "";
+	var ml_score = ML_getCookie('vs_conv_ai')
+	var ml_score_int = parseInt(ml_score.split('-')[1]); 
+	if(ml_score_int>60){
+		ml_vs_band = "High"
+	} else if(ml_score_int>30 && ml_score_int<=60){
+		ml_vs_band = "Mid"
+	} else{
+		ml_vs_band = "Low"
+	}
+	ML_setCookie("vs_intent", ml_vs_band);
+	return {
+        "ml_vs_band":ml_vs_band,
+        "ml_score_range":ml_score
+    };
+}
+
+
+var ml_drift_load_count = 0;
+function ml_drift_trackEvents(){
+    if(("drift" in window && "scoring" in window) || ml_drift_load_count > 10){ 
+
+        try {
+            var _6sCompanyDetails =  JSON.parse(localStorage.getItem("_6senseCompanyDetails"))
+            /*
+            * 6sense Ojbect
+            */
+
+            if(_6sCompanyDetails != null){
+                if(typeof(_6sCompanyDetails.company) != "undefined" && typeof(_6sCompanyDetails.company) != "undefined" && _6sCompanyDetails.company.name != ""){
+                    setTimeout(function(){
+                        if(ML_getCookie("ml_6si_sent") == ""){
+                            scoring.tracking.pageEvents({
+                                '6s_company': localStorage.getItem("_6senseCompanyDetails")
+                            });
+                            ML_setCookie("ml_6si_sent", "sent",3650)
+                        }
+                    },5000);
+                }
+            }
+        } catch (error) {
+            //Nothing
+        }
+        try{
+            if(typeof(window.drift) != 'undefined'){
+    
+                drift.on("conversation:playbookFired", function(data) {
+                    window.scoring.tracking.pageEvents({
+                        "event": "DRIFT_PLAYBOOK_FIRED",
+                        "d_campaign"	: data.campaignId,
+                        "d_playbook"	: data.playbookId,
+                        "d_cid"		: data.conversationId,
+                        "d_vid" : ML_getCookie("driftt_aid")
+                    }) ;
+    
+                });
+    
+                drift.on("conversation:playbookClicked", function(data) {
+                    // console.log("Playbook fired: " + JSON.stringify(data))
+                    window.scoring.tracking.pageEvents({
+                        "event": "DRIFT_PLAYBOOK_CLICKED",
+                        "d_campaign"	: data.campaignId,
+                        "d_playbook"	: data.playbookId,
+                        "d_cid"		: data.conversationId,
+                        "d_vid" : ML_getCookie("driftt_aid")
+                    }) ;
+                });
+    
+                
+                /*
+                *  Email Submit Capture
+                *  
+                */
+    
+                window.drift.on("emailCapture", function(data) {
+                    window.scoring.tracking.pageEvents({
+                        "event": "DRIFT_EMAIL_CAPTURED"
+                    }) ;
+                });
+                
+                /*
+                *  Conversation Start
+                *  @Captures start of a conversation along with conversation id
+                */
+    
+    
+                window.drift.on('startConversation', function (event) {
+                    // console.log("startConversation")
+                    window.scoring.tracking.pageEvents({
+                        "event": "DRIFT_CHAT_STARTED",
+                        "d_cid": JSON.stringify(event.conversationId),
+                        "d_vid" : ML_getCookie("driftt_aid")
+                    }) ;
+    
+                });
+    
+                /*
+                *      Meeting Booked
+                */
+    
+                window.drift.on("scheduling:meetingBooked", function(data) {
+                    // console.log("scheduling:meetingBooked")
+                    // console.log("user booked a meeting with " + data.teamMember.name);
+                    window.scoring.tracking.pageEvents({
+                        "event": "DRIFT_MEETING_BOOKED"
+                    }) ;
+                });
+    
+                /*
+                *      Phone captured in chat
+                */
+                window.drift.on("phoneCapture", function(data) {
+                    // console.log("User provided a phone number: " + JSON.stringify(data))
+                    window.scoring.tracking.pageEvents({
+                        "event": "DRIFT_PHONE_NUMBER_CAPTURED"
+                    }) ;
+                });
+    
+            } else{
+                window.scoring.tracking.pageEvents({
+                    "event": "DRIFT_FUNCTION_NOT_FOUND"
+                });
+            }
+        }catch(e){
+            // DO NOTHING
+        }
+
+        // Conversion tracking PROSERV-5515
+
+        //Free Trial Form
+        var ml_free_trial = document.querySelector("#fxb_3a9db7e7-7421-485a-9715-63cd39f1b978_5f233154-174f-497d-a824-2facefda6d45 input[type='submit']")
+        if(ml_free_trial != null){
+            ml_free_trial.addEventListener("click", function(){
+                scoring.tracking.pageEvents({
+                    "event": "Trial_Signup"
+                });
+            })
+        }
+        // Get a quote submit button
+        
+        var ml_getQuote = document.querySelector("#fxb_3a9db7e7-7421-485a-9715-63cd39f1b978_3b5e8a44-0469-4751-9243-0692bfbb41ee input[type='submit']");
+        if(ml_getQuote != null){
+            ml_getQuote.addEventListener("click", function(){  
+                scoring.tracking.pageEvents({
+                    "event": "Quote_Request"
+                });
+            })
+        }
+
+        //Content Download Links
+        var ml_pdf_links = document.querySelectorAll('a[href$=".pdf"]');
+        if(ml_pdf_links.length > 0){
+            ml_pdf_links.forEach(function(link){
+                link.addEventListener("click", function(){
+                    scoring.tracking.pageEvents({
+                        "event": "Content_Download"
+                    });
+                })
+            })
+        }
+
+        //Request a Demo
+        var ml_req_demo = document.querySelector("#fxb_3a9db7e7-7421-485a-9715-63cd39f1b978_abd63067-28a4-4b3d-84ba-6a663ac05a9a input[type='submit']");
+        if(ml_req_demo != null){
+            ml_req_demo.addEventListener("click", function(){  
+                scoring.tracking.pageEvents({
+                    "event": "Demo_Request"
+                });
+            })
+        }
+
+        //Contact-Us form
+        var ml_contact_us = document.querySelector("#fxb_3a9db7e7-7421-485a-9715-63cd39f1b978_680a65de-9b91-4581-b45c-c88c6308e484 input[type='submit']");
+        if(ml_contact_us != null){
+            ml_contact_us.addEventListener("click", function(){  
+                scoring.tracking.pageEvents({
+                    "event": "Contact_Us"
+                });
+            })
+        }
+        
+    } else{
+        ml_drift_load_count++;
+        setTimeout(ml_drift_trackEvents,2000);
+    }
+}
+	
+ml_drift_trackEvents();
+
